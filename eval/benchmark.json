@@ -1,0 +1,329 @@
+[
+  {
+    "id": "kpi",
+    "question": "How many policies and claims are in the portfolio?",
+    "expected_tools": [
+      "get_kpis"
+    ],
+    "must_contain_any": [
+      [
+        "policy",
+        "policies"
+      ],
+      [
+        "claim",
+        "claims"
+      ]
+    ]
+  },
+  {
+    "id": "kpi-loss",
+    "question": "What is the overall loss cost per exposure-year and average claim severity?",
+    "expected_tools": [
+      "get_kpis"
+    ],
+    "must_contain": [
+      "loss",
+      "severity"
+    ]
+  },
+  {
+    "id": "region-frequency",
+    "question": "Which region has the highest claim frequency?",
+    "expected_tools": [
+      "regional_summary"
+    ],
+    "must_contain": [
+      "R94"
+    ]
+  },
+  {
+    "id": "region-comparison",
+    "question": "Compare claim frequency across regions.",
+    "expected_tools": [
+      "regional_summary"
+    ],
+    "must_contain": [
+      "R94",
+      "R21"
+    ]
+  },
+  {
+    "id": "region-severity",
+    "question": "Which region has the highest average claim severity?",
+    "expected_tools": [
+      "regional_summary"
+    ],
+    "must_contain": [
+      "R21"
+    ]
+  },
+  {
+    "id": "region-loss-cost",
+    "question": "Show the regions ranked by loss cost per exposure-year.",
+    "expected_tools": [
+      "regional_summary"
+    ],
+    "must_contain": [
+      "loss",
+      "R94"
+    ]
+  },
+  {
+    "id": "fuel",
+    "question": "How does claim severity differ between Diesel and Regular vehicles?",
+    "expected_tools": [
+      "fuel_summary"
+    ],
+    "must_contain": [
+      "Diesel",
+      "Regular"
+    ]
+  },
+  {
+    "id": "fuel-frequency",
+    "question": "Which fuel type has the higher claim frequency?",
+    "expected_tools": [
+      "fuel_summary"
+    ],
+    "must_contain": [
+      "Regular"
+    ]
+  },
+  {
+    "id": "fuel-total",
+    "question": "Compare the total claim amounts for Diesel and Regular vehicles.",
+    "expected_tools": [
+      "fuel_summary"
+    ],
+    "must_contain": [
+      "Diesel",
+      "Regular"
+    ]
+  },
+  {
+    "id": "age",
+    "question": "What is the claim frequency across driver age bands?",
+    "expected_tools": [
+      "driver_age_summary"
+    ],
+    "must_contain": [
+      "claim",
+      "frequency"
+    ],
+    "must_contain_any": [
+      [
+        "<25",
+        "under 25",
+        "younger than 25",
+        "youngest",
+        "young drivers",
+        "youngest",
+        "young drivers"
+      ],
+      [
+        "25-34",
+        "25 to 34",
+        "ages 25",
+        "25-34",
+        "25 to 34",
+        "25-34",
+        "25 to 34"
+      ],
+      [
+        "65+",
+        "65 and older",
+        "65 or older",
+        "senior drivers",
+        "older drivers"
+      ]
+    ]
+  },
+  {
+    "id": "age-young",
+    "question": "Which driver age band has the highest claim frequency?",
+    "expected_tools": [
+      "driver_age_summary"
+    ],
+    "must_contain_any": [
+      [
+        "<25",
+        "under 25",
+        "younger than 25",
+        "youngest",
+        "young drivers"
+      ]
+    ]
+  },
+  {
+    "id": "age-severity",
+    "question": "Compare average claim severity across driver age bands.",
+    "expected_tools": [
+      "driver_age_summary"
+    ],
+    "must_contain": [
+      "severity"
+    ],
+    "must_contain_any": [
+      [
+        "<25",
+        "under 25",
+        "younger than 25"
+      ],
+      [
+        "65+",
+        "65 and older",
+        "65 or older"
+      ]
+    ]
+  },
+  {
+    "id": "policy-lookup",
+    "question": "Look up policy 4020812.",
+    "expected_tools": [
+      "find_policy"
+    ],
+    "must_contain": [
+      "4020812"
+    ]
+  },
+  {
+    "id": "policy-lookup-2",
+    "question": "What are the observed details of policy 4132346?",
+    "expected_tools": [
+      "find_policy"
+    ],
+    "must_contain": [
+      "4132346"
+    ]
+  },
+  {
+    "id": "policy-lookup-3",
+    "question": "Show policy 1033112 and its observed claim statistics.",
+    "expected_tools": [
+      "find_policy"
+    ],
+    "must_contain": [
+      "1033112"
+    ]
+  },
+  {
+    "id": "anomalies",
+    "question": "Show me the most unusual policies.",
+    "expected_tools": [
+      "top_anomalies"
+    ],
+    "must_contain": [
+      "anomaly"
+    ]
+  },
+  {
+    "id": "anomaly-region",
+    "question": "Are anomaly flags concentrated in any region?",
+    "expected_tools": [
+      "anomaly_region_summary"
+    ],
+    "must_contain": [
+      "region"
+    ]
+  },
+  {
+    "id": "anomaly-review",
+    "question": "Which regions have the highest statistical review flag rate?",
+    "expected_tools": [
+      "anomaly_region_summary"
+    ],
+    "must_contain": [
+      "region",
+      "flag"
+    ]
+  },
+  {
+    "id": "coverage",
+    "question": "Is accidental screen damage covered?",
+    "expected_tools": [
+      "search_policy"
+    ],
+    "must_contain": [
+      "accidental",
+      "screen"
+    ]
+  },
+  {
+    "id": "theft",
+    "question": "What does the policy say about theft coverage?",
+    "expected_tools": [
+      "search_policy"
+    ],
+    "must_contain": [
+      "theft"
+    ]
+  },
+  {
+    "id": "battery",
+    "question": "Is normal battery degradation treated as accidental damage?",
+    "expected_tools": [
+      "search_policy"
+    ],
+    "must_contain": [
+      "battery"
+    ]
+  },
+  {
+    "id": "review-policy",
+    "question": "When can a claim receive additional fraud review?",
+    "expected_tools": [
+      "search_policy"
+    ],
+    "must_contain": [
+      "review"
+    ]
+  },
+  {
+    "id": "multi-region-kpi",
+    "question": "Which region has the highest claim frequency, and how does its average claim severity compare with the overall portfolio?",
+    "expected_tools": [
+      "regional_summary",
+      "get_kpis"
+    ],
+    "must_contain": [
+      "R94",
+      "severity"
+    ]
+  },
+  {
+    "id": "multi-fuel-kpi",
+    "question": "Which fuel type has the higher claim frequency, and how does its claim severity compare with the portfolio average?",
+    "expected_tools": [
+      "fuel_summary",
+      "get_kpis"
+    ],
+    "must_contain": [
+      "Regular",
+      "severity"
+    ]
+  },
+  {
+    "id": "multi-anomaly-kpi",
+    "question": "Show me the most unusual policies and also report the overall number of claims.",
+    "expected_tools": [
+      "top_anomalies",
+      "get_kpis"
+    ],
+    "must_contain": [
+      "anomaly",
+      "claim"
+    ]
+  },
+  {
+    "id": "multi-policy-anomaly",
+    "question": "For policy 4132346, what are its claim statistics and why is it flagged for review?",
+    "expected_tools": [
+      "find_policy"
+    ],
+    "must_contain": [
+      "4132346",
+      "review"
+    ]
+  }
+]

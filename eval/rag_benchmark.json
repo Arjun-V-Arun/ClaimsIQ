@@ -1,0 +1,138 @@
+[
+  {
+    "id": "screen",
+    "query": "Is accidental screen damage covered?",
+    "expected_policy_ids": [
+      "P-001"
+    ]
+  },
+  {
+    "id": "drop",
+    "query": "What happens if a device is accidentally dropped?",
+    "expected_policy_ids": [
+      "P-001"
+    ]
+  },
+  {
+    "id": "cosmetic",
+    "query": "Is cosmetic damage covered when functionality is unaffected?",
+    "expected_policy_ids": [
+      "P-001"
+    ]
+  },
+  {
+    "id": "deductible",
+    "query": "Does accidental damage have a deductible?",
+    "expected_policy_ids": [
+      "P-001"
+    ]
+  },
+  {
+    "id": "theft",
+    "query": "What are the rules for theft coverage?",
+    "expected_policy_ids": [
+      "P-002"
+    ]
+  },
+  {
+    "id": "lost-device",
+    "query": "Is loss without qualifying circumstances covered?",
+    "expected_policy_ids": [
+      "P-002"
+    ]
+  },
+  {
+    "id": "replacement",
+    "query": "What affects replacement limits for theft?",
+    "expected_policy_ids": [
+      "P-002"
+    ]
+  },
+  {
+    "id": "report-theft",
+    "query": "What should be supplied for a theft claim?",
+    "expected_policy_ids": [
+      "P-002"
+    ]
+  },
+  {
+    "id": "review",
+    "query": "When can a claim receive additional fraud review?",
+    "expected_policy_ids": [
+      "P-003"
+    ]
+  },
+  {
+    "id": "frequency-review",
+    "query": "Can unusually frequent claims trigger additional review?",
+    "expected_policy_ids": [
+      "P-003"
+    ]
+  },
+  {
+    "id": "high-value-review",
+    "query": "Can high claim value be a review signal?",
+    "expected_policy_ids": [
+      "P-003"
+    ]
+  },
+  {
+    "id": "not-fraud-proof",
+    "query": "Does an anomaly signal prove fraud?",
+    "expected_policy_ids": [
+      "P-003"
+    ]
+  },
+  {
+    "id": "battery",
+    "query": "Is normal battery degradation treated as accidental damage?",
+    "expected_policy_ids": [
+      "P-004"
+    ]
+  },
+  {
+    "id": "wear",
+    "query": "How is ordinary wear treated?",
+    "expected_policy_ids": [
+      "P-004"
+    ]
+  },
+  {
+    "id": "battery-plan",
+    "query": "Does battery service coverage depend on the protection plan?",
+    "expected_policy_ids": [
+      "P-004"
+    ]
+  },
+  {
+    "id": "battery-eligibility",
+    "query": "What eligibility rules apply to battery-related service?",
+    "expected_policy_ids": [
+      "P-004"
+    ]
+  },
+  {
+    "id": "negative-windshield",
+    "query": "Does the policy corpus discuss windshield replacement?",
+    "expected_policy_ids": [],
+    "max_distance": 1.25
+  },
+  {
+    "id": "negative-health",
+    "query": "Does the corpus discuss health insurance deductibles?",
+    "expected_policy_ids": [],
+    "max_distance": 1.25
+  },
+  {
+    "id": "negative-travel",
+    "query": "Does the corpus discuss travel cancellation?",
+    "expected_policy_ids": [],
+    "max_distance": 1.25
+  },
+  {
+    "id": "negative-home",
+    "query": "Does the corpus discuss home property damage?",
+    "expected_policy_ids": [],
+    "max_distance": 1.25
+  }
+]
