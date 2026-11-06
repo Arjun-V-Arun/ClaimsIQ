@@ -1,0 +1,56 @@
+{
+ "meta": {
+  "dataset": "insuranceQA@5c380dd08606",
+  "code_commit": "d8f7aac",
+  "generated": "2026-11-07",
+  "seed": 7
+ },
+ "held_out": {
+  "domain": "medicare-insurance",
+  "rule": "eligible domain (100+ valid and test questions) whose train questions most often retrieve a same-domain answer first, by BM25",
+  "same_domain_rate": {
+   "medicare-insurance": 0.97,
+   "life-insurance": 0.934,
+   "renters-insurance": 0.926,
+   "home-insurance": 0.848,
+   "auto-insurance": 0.847,
+   "health-insurance": 0.695
+  }
+ },
+ "answers_removed": 2869,
+ "questions": {
+  "valid": {
+   "answerable": 1720,
+   "unanswerable": 280
+  },
+  "test": {
+   "answerable": 1749,
+   "unanswerable": 251
+  }
+ },
+ "original_gate": {
+  "system": "dense_current (sentence-transformers/all-MiniLM-L6-v2) with the copilot's original thresholds",
+  "refused_when_unanswerable": 0.3108,
+  "refused_when_answerable": 0.0091,
+  "success@5_all_answerable": 0.5512,
+  "success@5_accepted_answerable": 0.5511
+ },
+ "tuned_rerank_gate": {
+  "system": "hybrid_rerank, threshold on the top cross-encoder score",
+  "threshold": 6.2079,
+  "valid_balanced_accuracy": 0.9039,
+  "refused_when_unanswerable": 0.8606,
+  "refused_when_answerable": 0.0961,
+  "success@5_all_answerable": 0.5906,
+  "success@5_accepted_answerable": 0.604
+ },
+ "tuned_cosine_gate": {
+  "system": "dense_current (sentence-transformers/all-MiniLM-L6-v2), threshold on top cosine",
+  "threshold": 0.7164,
+  "valid_balanced_accuracy": 0.9111,
+  "refused_when_unanswerable": 0.8765,
+  "refused_when_answerable": 0.0961,
+  "success@5_all_answerable": 0.5512,
+  "success@5_accepted_answerable": 0.5623
+ }
+}

@@ -1,0 +1,541 @@
+{
+ "meta": {
+  "dataset": "insuranceQA@5c380dd08606",
+  "code_commit": "d8f7aac",
+  "generated": "2026-11-07",
+  "seed": 7
+ },
+ "test_questions": 2000,
+ "device": "NVIDIA GeForce RTX 4070 Laptop GPU",
+ "models": {
+  "dense_current": "sentence-transformers/all-MiniLM-L6-v2",
+  "dense_best": "intfloat/e5-small-v2",
+  "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+  "rrf_k": 10,
+  "rerank_depth": 20
+ },
+ "systems": {
+  "bm25": {
+   "metrics": {
+    "success@1": {
+     "estimate": 0.2195,
+     "low": 0.202,
+     "high": 0.238
+    },
+    "success@5": {
+     "estimate": 0.412,
+     "low": 0.391,
+     "high": 0.4335
+    },
+    "success@20": {
+     "estimate": 0.575,
+     "low": 0.5525,
+     "high": 0.596
+    },
+    "success@100": {
+     "estimate": 0.724,
+     "low": 0.7045,
+     "high": 0.7435
+    },
+    "recall@20": {
+     "estimate": 0.4722,
+     "low": 0.4522,
+     "high": 0.4917
+    },
+    "recall@100": {
+     "estimate": 0.6373,
+     "low": 0.6177,
+     "high": 0.6569
+    },
+    "mrr@10": {
+     "estimate": 0.3011,
+     "low": 0.2835,
+     "high": 0.3196
+    },
+    "ndcg@10": {
+     "estimate": 0.2975,
+     "low": 0.2818,
+     "high": 0.3151
+    }
+   },
+   "latency": {
+    "queries": 200,
+    "p50_ms": 2.0,
+    "p95_ms": 3.3
+   }
+  },
+  "dense_current": {
+   "metrics": {
+    "success@1": {
+     "estimate": 0.318,
+     "low": 0.298,
+     "high": 0.338
+    },
+    "success@5": {
+     "estimate": 0.5565,
+     "low": 0.5345,
+     "high": 0.577
+    },
+    "success@20": {
+     "estimate": 0.727,
+     "low": 0.7075,
+     "high": 0.7465
+    },
+    "success@100": {
+     "estimate": 0.8795,
+     "low": 0.864,
+     "high": 0.894
+    },
+    "recall@20": {
+     "estimate": 0.6228,
+     "low": 0.6035,
+     "high": 0.641
+    },
+    "recall@100": {
+     "estimate": 0.809,
+     "low": 0.7939,
+     "high": 0.8243
+    },
+    "mrr@10": {
+     "estimate": 0.4183,
+     "low": 0.4009,
+     "high": 0.4368
+    },
+    "ndcg@10": {
+     "estimate": 0.4126,
+     "low": 0.3965,
+     "high": 0.429
+    }
+   },
+   "latency": {
+    "queries": 200,
+    "p50_ms": 15.5,
+    "p95_ms": 19.4
+   }
+  },
+  "dense_best": {
+   "metrics": {
+    "success@1": {
+     "estimate": 0.355,
+     "low": 0.335,
+     "high": 0.377
+    },
+    "success@5": {
+     "estimate": 0.59,
+     "low": 0.57,
+     "high": 0.61
+    },
+    "success@20": {
+     "estimate": 0.767,
+     "low": 0.7485,
+     "high": 0.785
+    },
+    "success@100": {
+     "estimate": 0.888,
+     "low": 0.873,
+     "high": 0.9015
+    },
+    "recall@20": {
+     "estimate": 0.6613,
+     "low": 0.6425,
+     "high": 0.6794
+    },
+    "recall@100": {
+     "estimate": 0.823,
+     "low": 0.8074,
+     "high": 0.8377
+    },
+    "mrr@10": {
+     "estimate": 0.4568,
+     "low": 0.4389,
+     "high": 0.4753
+    },
+    "ndcg@10": {
+     "estimate": 0.4497,
+     "low": 0.433,
+     "high": 0.4665
+    }
+   },
+   "latency": {
+    "queries": 200,
+    "p50_ms": 21.4,
+    "p95_ms": 29.1
+   }
+  },
+  "hybrid": {
+   "metrics": {
+    "success@1": {
+     "estimate": 0.319,
+     "low": 0.2995,
+     "high": 0.3385
+    },
+    "success@5": {
+     "estimate": 0.5715,
+     "low": 0.55,
+     "high": 0.5925
+    },
+    "success@20": {
+     "estimate": 0.7515,
+     "low": 0.733,
+     "high": 0.7705
+    },
+    "success@100": {
+     "estimate": 0.8765,
+     "low": 0.863,
+     "high": 0.892
+    },
+    "recall@20": {
+     "estimate": 0.648,
+     "low": 0.6302,
+     "high": 0.6664
+    },
+    "recall@100": {
+     "estimate": 0.8084,
+     "low": 0.793,
+     "high": 0.8237
+    },
+    "mrr@10": {
+     "estimate": 0.4236,
+     "low": 0.4055,
+     "high": 0.4427
+    },
+    "ndcg@10": {
+     "estimate": 0.4201,
+     "low": 0.4034,
+     "high": 0.4368
+    }
+   },
+   "latency": {
+    "queries": 200,
+    "p50_ms": 20.9,
+    "p95_ms": 25.0
+   }
+  },
+  "hybrid_rerank": {
+   "metrics": {
+    "success@1": {
+     "estimate": 0.373,
+     "low": 0.351,
+     "high": 0.393
+    },
+    "success@5": {
+     "estimate": 0.599,
+     "low": 0.578,
+     "high": 0.6205
+    },
+    "success@20": {
+     "estimate": 0.7515,
+     "low": 0.733,
+     "high": 0.7705
+    },
+    "success@100": {
+     "estimate": 0.8765,
+     "low": 0.863,
+     "high": 0.892
+    },
+    "recall@20": {
+     "estimate": 0.648,
+     "low": 0.6302,
+     "high": 0.6664
+    },
+    "recall@100": {
+     "estimate": 0.8084,
+     "low": 0.793,
+     "high": 0.8237
+    },
+    "mrr@10": {
+     "estimate": 0.4732,
+     "low": 0.4538,
+     "high": 0.492
+    },
+    "ndcg@10": {
+     "estimate": 0.4626,
+     "low": 0.4451,
+     "high": 0.4798
+    }
+   },
+   "latency": {
+    "queries": 200,
+    "p50_ms": 87.2,
+    "p95_ms": 136.8
+   }
+  }
+ },
+ "paired": {
+  "dense_current vs bm25": {
+   "success@5": {
+    "estimate": 0.1445,
+    "low": 0.1225,
+    "high": 0.1655,
+    "better": 414,
+    "worse": 125
+   },
+   "mrr@10": {
+    "estimate": 0.1172,
+    "low": 0.0994,
+    "high": 0.1347,
+    "better": 747,
+    "worse": 299
+   },
+   "ndcg@10": {
+    "estimate": 0.1151,
+    "low": 0.1007,
+    "high": 0.1292,
+    "better": 805,
+    "worse": 317
+   }
+  },
+  "dense_best vs dense_current": {
+   "success@5": {
+    "estimate": 0.0335,
+    "low": 0.017,
+    "high": 0.05,
+    "better": 190,
+    "worse": 123
+   },
+   "mrr@10": {
+    "estimate": 0.0385,
+    "low": 0.0252,
+    "high": 0.0516,
+    "better": 525,
+    "worse": 358
+   },
+   "ndcg@10": {
+    "estimate": 0.037,
+    "low": 0.0268,
+    "high": 0.0473,
+    "better": 605,
+    "worse": 419
+   }
+  },
+  "hybrid vs dense_best": {
+   "success@5": {
+    "estimate": -0.0185,
+    "low": -0.032,
+    "high": -0.004,
+    "better": 97,
+    "worse": 134
+   },
+   "mrr@10": {
+    "estimate": -0.0332,
+    "low": -0.0454,
+    "high": -0.0214,
+    "better": 303,
+    "worse": 539
+   },
+   "ndcg@10": {
+    "estimate": -0.0296,
+    "low": -0.0389,
+    "high": -0.0211,
+    "better": 365,
+    "worse": 609
+   }
+  },
+  "hybrid_rerank vs hybrid": {
+   "success@5": {
+    "estimate": 0.0275,
+    "low": 0.0125,
+    "high": 0.0425,
+    "better": 150,
+    "worse": 95
+   },
+   "mrr@10": {
+    "estimate": 0.0495,
+    "low": 0.0366,
+    "high": 0.0625,
+    "better": 519,
+    "worse": 313
+   },
+   "ndcg@10": {
+    "estimate": 0.0424,
+    "low": 0.033,
+    "high": 0.0515,
+    "better": 600,
+    "worse": 365
+   }
+  },
+  "hybrid_rerank vs bm25": {
+   "success@5": {
+    "estimate": 0.187,
+    "low": 0.168,
+    "high": 0.2075,
+    "better": 442,
+    "worse": 68
+   },
+   "mrr@10": {
+    "estimate": 0.172,
+    "low": 0.1552,
+    "high": 0.1878,
+    "better": 807,
+    "worse": 203
+   },
+   "ndcg@10": {
+    "estimate": 0.1651,
+    "low": 0.1517,
+    "high": 0.1782,
+    "better": 890,
+    "worse": 210
+   }
+  }
+ },
+ "by_domain": {
+  "bm25": {
+   "life-insurance": {
+    "n": 514,
+    "success@5": 0.4669
+   },
+   "medicare-insurance": {
+    "n": 251,
+    "success@5": 0.4502
+   },
+   "auto-insurance": {
+    "n": 249,
+    "success@5": 0.3333
+   },
+   "health-insurance": {
+    "n": 245,
+    "success@5": 0.4204
+   },
+   "home-insurance": {
+    "n": 201,
+    "success@5": 0.3035
+   },
+   "renters-insurance": {
+    "n": 140,
+    "success@5": 0.3071
+   },
+   "disability-insurance": {
+    "n": 102,
+    "success@5": 0.4706
+   },
+   "retirement-plans": {
+    "n": 95,
+    "success@5": 0.4737
+   },
+   "annuities": {
+    "n": 94,
+    "success@5": 0.4255
+   },
+   "long-term-care-insurance": {
+    "n": 89,
+    "success@5": 0.427
+   },
+   "critical-illness-insurance": {
+    "n": 17,
+    "success@5": 0.4706
+   },
+   "other-insurance": {
+    "n": 3,
+    "success@5": 0.6667
+   }
+  },
+  "hybrid_rerank": {
+   "life-insurance": {
+    "n": 514,
+    "success@5": 0.6829
+   },
+   "medicare-insurance": {
+    "n": 251,
+    "success@5": 0.6653
+   },
+   "auto-insurance": {
+    "n": 249,
+    "success@5": 0.5341
+   },
+   "health-insurance": {
+    "n": 245,
+    "success@5": 0.5959
+   },
+   "home-insurance": {
+    "n": 201,
+    "success@5": 0.4677
+   },
+   "renters-insurance": {
+    "n": 140,
+    "success@5": 0.4214
+   },
+   "disability-insurance": {
+    "n": 102,
+    "success@5": 0.6765
+   },
+   "retirement-plans": {
+    "n": 95,
+    "success@5": 0.7053
+   },
+   "annuities": {
+    "n": 94,
+    "success@5": 0.4894
+   },
+   "long-term-care-insurance": {
+    "n": 89,
+    "success@5": 0.573
+   },
+   "critical-illness-insurance": {
+    "n": 17,
+    "success@5": 0.7059
+   },
+   "other-insurance": {
+    "n": 3,
+    "success@5": 1.0
+   }
+  }
+ },
+ "failures": [
+  {
+   "qid": "test-100",
+   "domain": "life-insurance",
+   "question": "How Much Does Life Insurance Cost?",
+   "retrieved_first": "Life insurance usually costs under $100 per month. The age of the Insured, the length of time that the price is locked in, the health of the person being insure...",
+   "a_correct_answer": "Video Transcript: Today's question is, \"How much does life insurance cost?\" Well, it depends on your gender, your age, your smoking habits, your medical backgro..."
+  },
+  {
+   "qid": "test-137",
+   "domain": "annuities",
+   "question": "Can Annuities Be Willed?",
+   "retrieved_first": "Yes, annuities can be inherited. When the annuity is inherited during the annuitization stage, the recipients of the annuity payments will need to pay income ta...",
+   "a_correct_answer": "Annuities are contracts. They identify a beneficiary to receive proceeds in the case of a premature death. The company is required to honor the beneficiary. If ..."
+  },
+  {
+   "qid": "test-316",
+   "domain": "home-insurance",
+   "question": "What Is A Typical Home Insurance Cost?",
+   "retrieved_first": "Great question. A home insurance policy cost on average about $300-$900 a year. It also depends on a multible factors such as your home location. The age of you...",
+   "a_correct_answer": "Home insurance is written for homes. Homes are never typical. It is the uniqueness that makes home ownership attractive. A homeowners policy is based upon the v..."
+  },
+  {
+   "qid": "test-658",
+   "domain": "health-insurance",
+   "question": "Can I Save Money On My Health Insurance Premiums In The Marketplace?",
+   "retrieved_first": "I would work through an independent health insurance agent/broker who can review options for multiple companies and create a thorough comparison between plans. ...",
+   "a_correct_answer": "That is an excellent question! You may very well, and it certainly doesn't hurt to look. There are a lot of things that will determine the cost of your plan, bu..."
+  },
+  {
+   "qid": "test-812",
+   "domain": "annuities",
+   "question": "How Do Lifetime Annuities Work?",
+   "retrieved_first": "Lifetime annuities are annuities that pay the annuitants monthly payments for the rest of their lives. The annuity can be an immediate annuity, where a lump sum...",
+   "a_correct_answer": "The combination of mortality credits and the interest rate yield create a compelling reason to investigate lifetime income you cant outlive. Generally speaking,..."
+  },
+  {
+   "qid": "test-1351",
+   "domain": "renters-insurance",
+   "question": "How Cheap Is Renters Insurance?",
+   "retrieved_first": "Renters insurance can be very affordable. The premiums for renter's insurance normally range between $100 and $300 depending on the limits selected for your par...",
+   "a_correct_answer": "Renters Insurance can be purchased for as little as $8/mo.. Make sure to purchase a policy with replacement cost for your belongings. The coverage typically add..."
+  },
+  {
+   "qid": "test-1681",
+   "domain": "home-insurance",
+   "question": "What Happens When Your Homeowners Insurance Drops You?",
+   "retrieved_first": "A car insurance company can drop your homeowner's insurance. It happens every day. For example, if your driving record was clean and you had no claims for 20 ye...",
+   "a_correct_answer": "Well, if for some reason your company non-renews or cancelsyour Homeowners' coverage, the best thing to do would be to start researching coverage availablity wi..."
+  },
+  {
+   "qid": "test-1957",
+   "domain": "health-insurance",
+   "question": "I'm Pregnant Can I Get Health Insurance?",
+   "retrieved_first": "Yes you can get health insurance when pregnant, but there are limitations. There are three places to turn. You can enroll in a group health plan through your em...",
+   "a_correct_answer": "Yes. Under the new Affordable Care Act, you can not be declined for health insurance for any medical-related conditions. Each policy is required to cover 10 ess..."
+  }
+ ]
+}
