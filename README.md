@@ -71,14 +71,17 @@ These are **statistical review signals, not fraud labels or automated claim deci
 
 The copilot's `search_policy` tool searches a small project-authored policy corpus, embedded with Sentence-Transformers and indexed in ChromaDB, behind a relevance gate that accepts a result only when semantic similarity is backed by lexical evidence.
 
-Four documents cannot show whether retrieval works, so retrieval is also measured on **InsuranceQA**: 27,413 answers written by insurance professionals and 2,000 test questions from real users, with the correct answers labelled by the dataset's authors. Four retrievers are compared on the same questions:
+Four documents cannot show whether retrieval works, so retrieval is also measured on **InsuranceQA**: 27,413 answers written by insurance professionals and 2,000 test questions from real users, with the correct answers labelled by the dataset's authors. These systems are compared on the same questions:
 
 ```text
 BM25 keyword search
 Embedding search (three small models, one chosen on validation data)
 Hybrid: reciprocal rank fusion of the two
+Embeddings + cross-encoder reranking
 Hybrid + cross-encoder reranking
 ```
+
+Which of them to ship is itself chosen on the validation split.
 
 The copilot's original relevance gate is also tested on questions the index genuinely cannot answer. Results are below and in [`docs/retrieval.md`](docs/retrieval.md).
 

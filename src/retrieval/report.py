@@ -22,8 +22,13 @@ NAMES = {
     "dense_current": "Embeddings, the copilot's current model",
     "dense_best": "Embeddings, best model on valid",
     "hybrid": "Hybrid: BM25 + embeddings, rank fusion",
+    "dense_rerank": "Embeddings + cross-encoder rerank",
     "hybrid_rerank": "Hybrid + cross-encoder rerank",
 }
+
+
+def _short(model: str) -> str:
+    return model.split("/")[-1]
 
 
 def _load(name: str) -> dict | None:
@@ -61,11 +66,20 @@ def summary_table() -> str:
                      f"MRR@10 {m['mrr@10']['estimate']:.3f}, "
                      f"{bm25['latency']['p50_ms']:.1f} ms per query on CPU"))
     if systems:
-        best = systems["systems"]["hybrid_rerank"]
-        delta = systems["paired"]["hybrid_rerank vs bm25"]["success@5"]
-        rows.append(("Hybrid + rerank: correct answer in top 5", _ci(best["metrics"]["success@5"]),
-                     f"{_delta(delta)} vs BM25, "
-                     f"{best['latency']['p50_ms']:.0f} ms per query on {systems['device']}"))
+        chosen = systems.get("chosen", "hybrid_rerank")
+        alone = systems.get("embeddings_alone", "dense_best")
+        emb = systems["systems"][alone]
+        rows.append((f"Embeddings alone ({_short(systems['models']['dense_best'])}): "
+                     "correct answer in top 5", _ci(emb["metrics"]["success@5"]),
+                     f"MRR@10 {emb['metrics']['mrr@10']['estimate']:.3f}, "
+                     f"{emb['latency']['p50_ms']:.0f} ms per query on {systems['device']}"))
+        if chosen != alone:
+            best = systems["systems"][chosen]
+            delta = systems["paired"][f"{chosen} vs {alone}"]
+            rows.append((f"Chosen on valid: {NAMES.get(chosen, chosen)}",
+                         _ci(best["metrics"]["success@5"]),
+                         f"{_delta(delta['success@5'])} vs embeddings alone, "
+                         f"{best['latency']['p50_ms']:.0f} ms per query"))
     if gate:
         old = gate["original_gate"]
         new = gate["tuned_rerank_gate"]
@@ -144,18 +158,27 @@ def document() -> str:
     out += ["## Learned Retrieval", ""]
     systems = _load("systems")
     chosen = _load("selection_dense")
-    if systems and chosen:
+    if systems and chosen and "pipelines_valid" in chosen:
+        picked = systems["chosen"]
+        depths = chosen["chosen_rerank_depth"]
         out += [f"Run on {systems['device']}. Embedding model chosen on valid: "
                 f"`{chosen['chosen_model']}` ("
-                + ", ".join(f"`{k}` {v:.3f}" for k, v in chosen["dense_models"].items())
+                + ", ".join(f"`{_short(k)}` {v:.3f}" for k, v in chosen["dense_models"].items())
                 + f" MRR@10). Fusion constant k = {chosen['chosen_rrf_k']}. Reranker "
-                f"`{chosen['reranker']}` over the top {chosen['chosen_rerank_depth']}.", "",
+                f"`{chosen['reranker']}` over the top {depths['dense']} embedding candidates "
+                f"or the top {depths['hybrid']} hybrid candidates.", "",
+                "Whole pipelines were also compared on valid, and the winner is the one this "
+                "project would ship: "
+                + "; ".join(f"{NAMES[k]} {v:.3f}" for k, v in
+                            chosen["pipelines_valid"].items())
+                + f" MRR@10. Chosen: **{NAMES.get(picked, picked)}**.", "",
                 "| System | Success@1 | Success@5 (95% CI) | MRR@10 | nDCG@10 | Success@100 "
                 "| Latency p50 / p95 |", "|---|---|---|---|---|---|---|"]
         for key, sys_ in systems["systems"].items():
             m = sys_["metrics"]
             lat = sys_["latency"]
-            out.append(f"| {NAMES.get(key, key)} | {_pct(m['success@1']['estimate'])} "
+            label = NAMES.get(key, key) + (" **(chosen on valid)**" if key == picked else "")
+            out.append(f"| {label} | {_pct(m['success@1']['estimate'])} "
                        f"| {_ci(m['success@5'])} | {m['mrr@10']['estimate']:.3f} "
                        f"| {m['ndcg@10']['estimate']:.3f} | {_pct(m['success@100']['estimate'])} "
                        f"| {lat['p50_ms']:.0f} / {lat['p95_ms']:.0f} ms |")
@@ -168,13 +191,14 @@ def document() -> str:
                        f"| {_delta(d['mrr@10'], pct=False)} "
                        f"| {d['success@5']['better']} / {d['success@5']['worse']} |")
         dom = systems["by_domain"]
-        out += ["", "Success@5 by domain:", "", "| Domain | Questions | BM25 | Hybrid + rerank |",
+        out += ["", "Success@5 by domain:", "", "| Domain | Questions | BM25 | Chosen pipeline |",
                 "|---|---|---|---|"]
         for domain, row in dom["bm25"].items():
             out.append(f"| {domain} | {row['n']} | {_pct(row['success@5'])} "
-                       f"| {_pct(dom['hybrid_rerank'][domain]['success@5'])} |")
-        out += ["", "Questions hybrid + rerank missed entirely (no correct answer in its top "
-                "20), a seeded sample:", ""]
+                       f"| {_pct(dom[picked][domain]['success@5'])} |")
+        out += ["", "Questions the chosen pipeline missed entirely (no correct answer in its "
+                "top 20), a seeded sample. Several retrieved answers may be correct but "
+                "unlabelled, which is why every score here is a lower bound:", ""]
         for f in systems["failures"]:
             out += [f"- **{f['question']}** ({f['domain']})",
                     f"  - Retrieved first: {f['retrieved_first']}",
@@ -203,13 +227,22 @@ def document() -> str:
         if gate:
             out.append(_gate_rows("Copilot's original rule and thresholds", gate["original_gate"]))
             out.append(_gate_rows("Tuned on top cosine, current model", gate["tuned_cosine_gate"]))
-            out.append(_gate_rows("Tuned on top cross-encoder score", gate["tuned_rerank_gate"]))
+            out.append(_gate_rows("Tuned on top cross-encoder score, chosen pipeline",
+                                  gate["tuned_rerank_gate"]))
         out.append(_gate_rows("Tuned on BM25 score per unit of query idf", gate_bm25["bm25"]))
         out += ["", "Removing a domain leaves related answers in other domains, so some "
                 "\"unanswerable\" questions still have partly useful answers, and even a "
                 "perfect gate would not refuse all of them.", ""]
 
-    out += ["## Limits", "",
+    out += ["## Revisions", "",
+            "- **First published run.** The pipeline always fused BM25 with embeddings "
+            "before reranking. On test, fusion lowered accuracy, and the comparison a reader "
+            "needs most, reranking against embeddings alone, was missing. Fusion and "
+            "reranking are now chosen on valid like every other setting, embeddings + rerank "
+            "is reported as its own system, and the chosen pipeline is compared with "
+            "embeddings alone. The change was made after seeing test results, which is why "
+            "it is recorded here. The choice itself uses only valid data.", "",
+            "## Limits", "",
             "- One public dataset from one Q&A site, mostly about US insurance products.",
             "- Labels mark the answers written for each question. Another answer can be "
             "correct without being labelled, so every score here is a lower bound.",
@@ -217,6 +250,9 @@ def document() -> str:
             "every learned score.",
             "- Latency is measured one query at a time on one machine and will differ "
             "elsewhere.",
+            "- The held-out domain was picked because it is the most self-contained, so its "
+            "questions are the easiest kind to refuse. Questions close to an indexed topic "
+            "but not answered by it would be harder.",
             "- The copilot's `search_policy` tool still uses the four demonstration "
             "documents. Switching it to the winning retriever is the next step.", ""]
     return "\n".join(out)
