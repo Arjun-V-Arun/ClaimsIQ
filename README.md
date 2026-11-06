@@ -136,7 +136,8 @@ The tool-routing metrics measure implementation behaviour on this benchmark. The
 |---|---|---|
 | Benchmark | 27,413 expert answers, 2,000 real test questions | InsuranceQA V2, labels from the dataset authors |
 | BM25: correct answer in top 5 | 41.2% (39.1% to 43.4%) | MRR@10 0.301, 2.3 ms per query on CPU |
-| Hybrid + rerank: correct answer in top 5 | 59.9% (57.8% to 62.1%) | +18.7 pts (+16.8 to +20.8) vs BM25, 87 ms per query on NVIDIA GeForce RTX 4070 Laptop GPU |
+| Embeddings alone (e5-small-v2): correct answer in top 5 | 59.0% (57.0% to 61.0%) | MRR@10 0.457, 10 ms per query on NVIDIA GeForce RTX 4070 Laptop GPU |
+| Chosen on valid: Hybrid + cross-encoder rerank | 59.9% (57.8% to 62.1%) | +0.9 pts (-0.5 to +2.4) vs embeddings alone, 35 ms per query |
 | Original relevance gate on real unanswerable questions | refused 31% | and refused 1% of answerable ones |
 | Tuned gate on the same questions | refused 86% | and refused 10% of answerable ones |
 <!-- retrieval:end -->

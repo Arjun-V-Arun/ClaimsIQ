@@ -1,7 +1,7 @@
 {
  "meta": {
   "dataset": "insuranceQA@5c380dd08606",
-  "code_commit": "d8f7aac",
+  "code_commit": "f957c63",
   "generated": "2026-11-07",
   "seed": 7
  },
@@ -36,7 +36,7 @@
   "success@5_accepted_answerable": 0.5511
  },
  "tuned_rerank_gate": {
-  "system": "hybrid_rerank, threshold on the top cross-encoder score",
+  "system": "hybrid_rerank, threshold on the top cross-encoder score over hybrid candidates",
   "threshold": 6.2079,
   "valid_balanced_accuracy": 0.9039,
   "refused_when_unanswerable": 0.8606,

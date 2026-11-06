@@ -1,18 +1,23 @@
 {
  "meta": {
   "dataset": "insuranceQA@5c380dd08606",
-  "code_commit": "d8f7aac",
+  "code_commit": "f957c63",
   "generated": "2026-11-07",
   "seed": 7
  },
  "test_questions": 2000,
  "device": "NVIDIA GeForce RTX 4070 Laptop GPU",
+ "chosen": "hybrid_rerank",
+ "embeddings_alone": "dense_best",
  "models": {
   "dense_current": "sentence-transformers/all-MiniLM-L6-v2",
   "dense_best": "intfloat/e5-small-v2",
   "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2",
   "rrf_k": 10,
-  "rerank_depth": 20
+  "rerank_depth": {
+   "dense": 20,
+   "hybrid": 20
+  }
  },
  "systems": {
   "bm25": {
@@ -60,8 +65,8 @@
    },
    "latency": {
     "queries": 200,
-    "p50_ms": 2.0,
-    "p95_ms": 3.3
+    "p50_ms": 1.4,
+    "p95_ms": 1.6
    }
   },
   "dense_current": {
@@ -109,8 +114,8 @@
    },
    "latency": {
     "queries": 200,
-    "p50_ms": 15.5,
-    "p95_ms": 19.4
+    "p50_ms": 6.1,
+    "p95_ms": 9.3
    }
   },
   "dense_best": {
@@ -158,8 +163,8 @@
    },
    "latency": {
     "queries": 200,
-    "p50_ms": 21.4,
-    "p95_ms": 29.1
+    "p50_ms": 10.0,
+    "p95_ms": 13.1
    }
   },
   "hybrid": {
@@ -207,8 +212,57 @@
    },
    "latency": {
     "queries": 200,
-    "p50_ms": 20.9,
-    "p95_ms": 25.0
+    "p50_ms": 12.0,
+    "p95_ms": 14.8
+   }
+  },
+  "dense_rerank": {
+   "metrics": {
+    "success@1": {
+     "estimate": 0.377,
+     "low": 0.3555,
+     "high": 0.3975
+    },
+    "success@5": {
+     "estimate": 0.597,
+     "low": 0.5765,
+     "high": 0.618
+    },
+    "success@20": {
+     "estimate": 0.767,
+     "low": 0.7485,
+     "high": 0.785
+    },
+    "success@100": {
+     "estimate": 0.888,
+     "low": 0.873,
+     "high": 0.9015
+    },
+    "recall@20": {
+     "estimate": 0.6613,
+     "low": 0.6425,
+     "high": 0.6794
+    },
+    "recall@100": {
+     "estimate": 0.823,
+     "low": 0.8074,
+     "high": 0.8377
+    },
+    "mrr@10": {
+     "estimate": 0.474,
+     "low": 0.4549,
+     "high": 0.4928
+    },
+    "ndcg@10": {
+     "estimate": 0.4602,
+     "low": 0.443,
+     "high": 0.4774
+    }
+   },
+   "latency": {
+    "queries": 200,
+    "p50_ms": 33.2,
+    "p95_ms": 53.2
    }
   },
   "hybrid_rerank": {
@@ -256,8 +310,8 @@
    },
    "latency": {
     "queries": 200,
-    "p50_ms": 87.2,
-    "p95_ms": 136.8
+    "p50_ms": 35.4,
+    "p95_ms": 54.5
    }
   }
  },
@@ -331,6 +385,29 @@
     "worse": 609
    }
   },
+  "dense_rerank vs dense_best": {
+   "success@5": {
+    "estimate": 0.007,
+    "low": -0.008,
+    "high": 0.0215,
+    "better": 123,
+    "worse": 109
+   },
+   "mrr@10": {
+    "estimate": 0.0172,
+    "low": 0.0054,
+    "high": 0.029,
+    "better": 395,
+    "worse": 350
+   },
+   "ndcg@10": {
+    "estimate": 0.0105,
+    "low": 0.0017,
+    "high": 0.0191,
+    "better": 472,
+    "worse": 413
+   }
+  },
   "hybrid_rerank vs hybrid": {
    "success@5": {
     "estimate": 0.0275,
@@ -354,6 +431,29 @@
     "worse": 365
    }
   },
+  "hybrid_rerank vs dense_rerank": {
+   "success@5": {
+    "estimate": 0.002,
+    "low": -0.0055,
+    "high": 0.01,
+    "better": 35,
+    "worse": 31
+   },
+   "mrr@10": {
+    "estimate": -0.0009,
+    "low": -0.0045,
+    "high": 0.003,
+    "better": 144,
+    "worse": 138
+   },
+   "ndcg@10": {
+    "estimate": 0.0024,
+    "low": -0.0019,
+    "high": 0.0069,
+    "better": 206,
+    "worse": 193
+   }
+  },
   "hybrid_rerank vs bm25": {
    "success@5": {
     "estimate": 0.187,
@@ -375,6 +475,29 @@
     "high": 0.1782,
     "better": 890,
     "worse": 210
+   }
+  },
+  "hybrid_rerank vs dense_best": {
+   "success@5": {
+    "estimate": 0.009,
+    "low": -0.0055,
+    "high": 0.0235,
+    "better": 131,
+    "worse": 113
+   },
+   "mrr@10": {
+    "estimate": 0.0164,
+    "low": 0.0049,
+    "high": 0.0277,
+    "better": 396,
+    "worse": 360
+   },
+   "ndcg@10": {
+    "estimate": 0.0129,
+    "low": 0.004,
+    "high": 0.0218,
+    "better": 475,
+    "worse": 427
    }
   }
  },

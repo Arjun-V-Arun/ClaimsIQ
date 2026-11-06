@@ -1,11 +1,11 @@
 {
  "meta": {
   "dataset": "insuranceQA@5c380dd08606",
-  "code_commit": "d8f7aac",
+  "code_commit": "f957c63",
   "generated": "2026-11-07",
   "seed": 7
  },
- "rule": "highest mrr@10 on valid at each step",
+ "rule": "highest mrr@10 on valid at each step, and for the whole pipeline",
  "dense_models": {
   "sentence-transformers/all-MiniLM-L6-v2": 0.3875,
   "BAAI/bge-small-en-v1.5": 0.4238,
@@ -19,14 +19,30 @@
  },
  "chosen_rrf_k": 10,
  "rerank_depth": {
-  "20": 0.4563,
-  "50": 0.453
+  "dense": {
+   "20": 0.4562,
+   "50": 0.4511
+  },
+  "hybrid": {
+   "20": 0.4563,
+   "50": 0.453
+  }
  },
- "chosen_rerank_depth": 20,
+ "chosen_rerank_depth": {
+  "dense": 20,
+  "hybrid": 20
+ },
  "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+ "pipelines_valid": {
+  "dense_best": 0.4374,
+  "hybrid": 0.4105,
+  "dense_rerank": 0.4562,
+  "hybrid_rerank": 0.4563
+ },
+ "chosen_pipeline": "hybrid_rerank",
  "encode_seconds": {
-  "sentence-transformers/all-MiniLM-L6-v2": 20.2,
-  "BAAI/bge-small-en-v1.5": 32.1,
-  "intfloat/e5-small-v2": 32.6
+  "sentence-transformers/all-MiniLM-L6-v2": 0.0,
+  "BAAI/bge-small-en-v1.5": 0.0,
+  "intfloat/e5-small-v2": 0.0
  }
 }

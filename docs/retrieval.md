@@ -32,15 +32,18 @@ The dataset ships a 100-answer candidate pool per question from keyword search. 
 
 ## Learned Retrieval
 
-Run on NVIDIA GeForce RTX 4070 Laptop GPU. Embedding model chosen on valid: `intfloat/e5-small-v2` (`sentence-transformers/all-MiniLM-L6-v2` 0.388, `BAAI/bge-small-en-v1.5` 0.424, `intfloat/e5-small-v2` 0.437 MRR@10). Fusion constant k = 10. Reranker `cross-encoder/ms-marco-MiniLM-L-6-v2` over the top 20.
+Run on NVIDIA GeForce RTX 4070 Laptop GPU. Embedding model chosen on valid: `intfloat/e5-small-v2` (`all-MiniLM-L6-v2` 0.388, `bge-small-en-v1.5` 0.424, `e5-small-v2` 0.437 MRR@10). Fusion constant k = 10. Reranker `cross-encoder/ms-marco-MiniLM-L-6-v2` over the top 20 embedding candidates or the top 20 hybrid candidates.
+
+Whole pipelines were also compared on valid, and the winner is the one this project would ship: Embeddings, best model on valid 0.437; Hybrid: BM25 + embeddings, rank fusion 0.410; Embeddings + cross-encoder rerank 0.456; Hybrid + cross-encoder rerank 0.456 MRR@10. Chosen: **Hybrid + cross-encoder rerank**.
 
 | System | Success@1 | Success@5 (95% CI) | MRR@10 | nDCG@10 | Success@100 | Latency p50 / p95 |
 |---|---|---|---|---|---|---|
-| BM25 keyword search | 21.9% | 41.2% (39.1% to 43.4%) | 0.301 | 0.297 | 72.4% | 2 / 3 ms |
-| Embeddings, the copilot's current model | 31.8% | 55.6% (53.4% to 57.7%) | 0.418 | 0.413 | 87.9% | 16 / 19 ms |
-| Embeddings, best model on valid | 35.5% | 59.0% (57.0% to 61.0%) | 0.457 | 0.450 | 88.8% | 21 / 29 ms |
-| Hybrid: BM25 + embeddings, rank fusion | 31.9% | 57.1% (55.0% to 59.2%) | 0.424 | 0.420 | 87.6% | 21 / 25 ms |
-| Hybrid + cross-encoder rerank | 37.3% | 59.9% (57.8% to 62.1%) | 0.473 | 0.463 | 87.6% | 87 / 137 ms |
+| BM25 keyword search | 21.9% | 41.2% (39.1% to 43.4%) | 0.301 | 0.297 | 72.4% | 1 / 2 ms |
+| Embeddings, the copilot's current model | 31.8% | 55.6% (53.4% to 57.7%) | 0.418 | 0.413 | 87.9% | 6 / 9 ms |
+| Embeddings, best model on valid | 35.5% | 59.0% (57.0% to 61.0%) | 0.457 | 0.450 | 88.8% | 10 / 13 ms |
+| Hybrid: BM25 + embeddings, rank fusion | 31.9% | 57.1% (55.0% to 59.2%) | 0.424 | 0.420 | 87.6% | 12 / 15 ms |
+| Embeddings + cross-encoder rerank | 37.7% | 59.7% (57.6% to 61.8%) | 0.474 | 0.460 | 88.8% | 33 / 53 ms |
+| Hybrid + cross-encoder rerank **(chosen on valid)** | 37.3% | 59.9% (57.8% to 62.1%) | 0.473 | 0.463 | 87.6% | 35 / 54 ms |
 
 Paired differences on the same test questions, 95% intervals:
 
@@ -49,12 +52,15 @@ Paired differences on the same test questions, 95% intervals:
 | Embeddings, the copilot's current model vs BM25 keyword search | +14.4 pts (+12.2 to +16.6) | +0.117 (+0.099 to +0.135) | 414 / 125 |
 | Embeddings, best model on valid vs Embeddings, the copilot's current model | +3.4 pts (+1.7 to +5.0) | +0.038 (+0.025 to +0.052) | 190 / 123 |
 | Hybrid: BM25 + embeddings, rank fusion vs Embeddings, best model on valid | -1.8 pts (-3.2 to -0.4) | -0.033 (-0.045 to -0.021) | 97 / 134 |
+| Embeddings + cross-encoder rerank vs Embeddings, best model on valid | +0.7 pts (-0.8 to +2.1) | +0.017 (+0.005 to +0.029) | 123 / 109 |
 | Hybrid + cross-encoder rerank vs Hybrid: BM25 + embeddings, rank fusion | +2.8 pts (+1.2 to +4.2) | +0.050 (+0.037 to +0.062) | 150 / 95 |
+| Hybrid + cross-encoder rerank vs Embeddings + cross-encoder rerank | +0.2 pts (-0.5 to +1.0) | -0.001 (-0.004 to +0.003) | 35 / 31 |
 | Hybrid + cross-encoder rerank vs BM25 keyword search | +18.7 pts (+16.8 to +20.8) | +0.172 (+0.155 to +0.188) | 442 / 68 |
+| Hybrid + cross-encoder rerank vs Embeddings, best model on valid | +0.9 pts (-0.5 to +2.4) | +0.016 (+0.005 to +0.028) | 131 / 113 |
 
 Success@5 by domain:
 
-| Domain | Questions | BM25 | Hybrid + rerank |
+| Domain | Questions | BM25 | Chosen pipeline |
 |---|---|---|---|
 | life-insurance | 514 | 46.7% | 68.3% |
 | medicare-insurance | 251 | 45.0% | 66.5% |
@@ -69,7 +75,7 @@ Success@5 by domain:
 | critical-illness-insurance | 17 | 47.1% | 70.6% |
 | other-insurance | 3 | 66.7% | 100.0% |
 
-Questions hybrid + rerank missed entirely (no correct answer in its top 20), a seeded sample:
+Questions the chosen pipeline missed entirely (no correct answer in its top 20), a seeded sample. Several retrieved answers may be correct but unlabelled, which is why every score here is a lower bound:
 
 - **How Much Does Life Insurance Cost?** (life-insurance)
   - Retrieved first: Life insurance usually costs under $100 per month. The age of the Insured, the length of time that the price is locked in, the health of the person being insure...
@@ -104,10 +110,14 @@ A retriever should refuse when the corpus has no answer. To test that with real 
 |---|---|---|---|---|
 | Copilot's original rule and thresholds | 31.1% | 0.9% | 55.1% | 55.1% |
 | Tuned on top cosine, current model | 87.6% | 9.6% | 55.1% | 56.2% |
-| Tuned on top cross-encoder score | 86.1% | 9.6% | 59.1% | 60.4% |
+| Tuned on top cross-encoder score, chosen pipeline | 86.1% | 9.6% | 59.1% | 60.4% |
 | Tuned on BM25 score per unit of query idf | 59.8% | 20.9% | 40.7% | 40.1% |
 
 Removing a domain leaves related answers in other domains, so some "unanswerable" questions still have partly useful answers, and even a perfect gate would not refuse all of them.
+
+## Revisions
+
+- **First published run.** The pipeline always fused BM25 with embeddings before reranking. On test, fusion lowered accuracy, and the comparison a reader needs most, reranking against embeddings alone, was missing. Fusion and reranking are now chosen on valid like every other setting, embeddings + rerank is reported as its own system, and the chosen pipeline is compared with embeddings alone. The change was made after seeing test results, which is why it is recorded here. The choice itself uses only valid data.
 
 ## Limits
 
@@ -115,5 +125,6 @@ Removing a domain leaves related answers in other domains, so some "unanswerable
 - Labels mark the answers written for each question. Another answer can be correct without being labelled, so every score here is a lower bound.
 - No model was fine-tuned on the training split. Doing so would likely raise every learned score.
 - Latency is measured one query at a time on one machine and will differ elsewhere.
+- The held-out domain was picked because it is the most self-contained, so its questions are the easiest kind to refuse. Questions close to an indexed topic but not answered by it would be harder.
 - The copilot's `search_policy` tool still uses the four demonstration documents. Switching it to the winning retriever is the next step.
 
