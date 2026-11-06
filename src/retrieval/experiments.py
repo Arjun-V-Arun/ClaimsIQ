@@ -11,7 +11,7 @@ import json
 import random
 import subprocess
 from collections import Counter, defaultdict
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from pathlib import Path
 
 import numpy as np
@@ -284,6 +284,18 @@ def run_bm25(ds: Dataset, directory: Path | None = None) -> dict:
 
 # --- GPU run: dense, fusion, reranking -------------------------------------------------
 
+@dataclass(frozen=True)
+class Choice:
+    """Everything chosen on valid that defines a pipeline."""
+    best: str                 # embedding model with the highest valid score
+    current: str              # the copilot's existing model, for comparison
+    k_rrf: int
+    depths: dict              # rerank depth per candidate generator: dense, hybrid
+
+
+RERANKED = {"dense_rerank": "dense", "hybrid_rerank": "hybrid"}
+
+
 class Pipeline:
     """Holds fitted retrievers so each experiment reuses the same indexes."""
 
@@ -297,15 +309,46 @@ class Pipeline:
         self.dense = {name: dense.DenseIndex(enc, cache_dir).fit(ids, docs)
                       for name, enc in encoders.items()}
 
+    def without(self, removed: set[int], directory: Path | None) -> "Pipeline":
+        """The same retrievers over a smaller corpus. Embeddings are reused."""
+        gated = Pipeline.__new__(Pipeline)
+        gated.ds, gated.scorer, gated.directory = self.ds, self.scorer, directory
+        gated.bm25 = fit_bm25(self.ds, bm25_params(directory), removed)
+        keep = np.array([i not in removed for i in self.bm25.ids])
+        gated.dense = {}
+        for name, index in self.dense.items():
+            sub = dense.DenseIndex(index.encoder)
+            sub.ids, sub.vectors = index.ids[keep], index.vectors[keep]
+            gated.dense[name] = sub
+        return gated
+
     def hybrid(self, model: str, questions: list[Question], k: int) -> np.ndarray:
         keyword, _ = self.bm25.search(texts(questions), DEPTH)
         semantic, _ = self.dense[model].search(texts(questions), DEPTH)
         return dense.rrf([keyword, semantic], k, DEPTH)
 
-    def reranked(self, fused: np.ndarray, questions: list[Question], depth: int):
-        top, top_scores = dense.rerank(self.scorer, texts(questions), fused,
+    def candidates(self, generator: str, questions: list[Question], choice: Choice) -> np.ndarray:
+        if generator == "hybrid":
+            return self.hybrid(choice.best, questions, choice.k_rrf)
+        return self.dense[choice.best].search(texts(questions), DEPTH)[0]
+
+    def reranked(self, candidates: np.ndarray, questions: list[Question], depth: int):
+        top, top_scores = dense.rerank(self.scorer, texts(questions), candidates,
                                        self.ds.answers, depth)
-        return np.concatenate([top, fused[:, depth:]], axis=1), top_scores
+        return np.concatenate([top, candidates[:, depth:]], axis=1), top_scores
+
+    def run(self, name: str, questions: list[Question], choice: Choice) -> np.ndarray:
+        if name == "bm25":
+            return self.bm25.search(texts(questions), DEPTH)[0]
+        if name == "dense_current":
+            return self.dense[choice.current].search(texts(questions), DEPTH)[0]
+        if name == "dense_best":
+            return self.dense[choice.best].search(texts(questions), DEPTH)[0]
+        if name == "hybrid":
+            return self.candidates("hybrid", questions, choice)
+        generator = RERANKED[name]
+        return self.reranked(self.candidates(generator, questions, choice), questions,
+                             choice.depths[generator])[0]
 
 
 def run_dense(ds: Dataset, encoders: dict[str, dense.Encoder], scorer: dense.Scorer,
@@ -315,96 +358,100 @@ def run_dense(ds: Dataset, encoders: dict[str, dense.Encoder], scorer: dense.Sco
         ds = Dataset(ds.answers, {s: rows[:limit] for s, rows in ds.questions.items()})
     pipe = Pipeline(ds, encoders, scorer, cache_dir, directory)
     valid, test = ds.split("valid"), ds.split("test")
+    mean = lambda ranked, qs: float(score(ranked, qs)[SELECT_BY].mean())
 
-    # 1. Choose on valid.
-    dense_valid = {name: float(score(index.search(texts(valid), 10)[0], valid)[SELECT_BY].mean())
+    # 1. Choose on valid. Whether to fuse with BM25 and whether to rerank are
+    #    choices like any other, so the shipped pipeline is the valid winner.
+    dense_valid = {name: mean(index.search(texts(valid), 10)[0], valid)
                    for name, index in pipe.dense.items()}
     best = max(dense_valid, key=dense_valid.get)
-    rrf_valid = {k: float(score(pipe.hybrid(best, valid, k), valid)[SELECT_BY].mean())
-                 for k in RRF_K}
+    current = dense.CURRENT_MODEL if dense.CURRENT_MODEL in pipe.dense else next(iter(pipe.dense))
+    rrf_valid = {k: mean(pipe.hybrid(best, valid, k), valid) for k in RRF_K}
     k_rrf = max(rrf_valid, key=rrf_valid.get)
-    fused_valid = pipe.hybrid(best, valid, k_rrf)
-    rerank_valid = {d: float(score(pipe.reranked(fused_valid, valid, d)[0], valid)[SELECT_BY].mean())
-                    for d in RERANK_DEPTHS}
-    depth = max(rerank_valid, key=rerank_valid.get)
+    draft = Choice(best, current, k_rrf, {})
+    rerank_valid = {
+        generator: {d: mean(pipe.reranked(found, valid, d)[0], valid) for d in RERANK_DEPTHS}
+        for generator, found in ((g, pipe.candidates(g, valid, draft)) for g in ("dense", "hybrid"))
+    }
+    depths = {g: max(v, key=v.get) for g, v in rerank_valid.items()}
+    choice = Choice(best, current, k_rrf, depths)
+    pipelines_valid = {"dense_best": dense_valid[best], "hybrid": rrf_valid[k_rrf],
+                       "dense_rerank": rerank_valid["dense"][depths["dense"]],
+                       "hybrid_rerank": rerank_valid["hybrid"][depths["hybrid"]]}
+    chosen = max(pipelines_valid, key=pipelines_valid.get)
     write_result("selection_dense", {
-        "rule": f"highest {SELECT_BY} on valid at each step",
+        "rule": f"highest {SELECT_BY} on valid at each step, and for the whole pipeline",
         "dense_models": {k: round(v, 4) for k, v in dense_valid.items()},
         "chosen_model": best,
         "rrf_k": {str(k): round(v, 4) for k, v in rrf_valid.items()}, "chosen_rrf_k": k_rrf,
-        "rerank_depth": {str(k): round(v, 4) for k, v in rerank_valid.items()},
-        "chosen_rerank_depth": depth, "reranker": scorer.name,
+        "rerank_depth": {g: {str(d): round(v, 4) for d, v in r.items()}
+                         for g, r in rerank_valid.items()},
+        "chosen_rerank_depth": depths, "reranker": scorer.name,
+        "pipelines_valid": {k: round(v, 4) for k, v in pipelines_valid.items()},
+        "chosen_pipeline": chosen,
         "encode_seconds": {n: round(getattr(i, "encode_seconds", 0.0), 1)
                            for n, i in pipe.dense.items()},
     }, directory)
 
-    # 2. Score each system once on test.
-    current = dense.CURRENT_MODEL if dense.CURRENT_MODEL in pipe.dense else next(iter(pipe.dense))
-    rankings = {"bm25": pipe.bm25.search(texts(test), DEPTH)[0],
-                "dense_current": pipe.dense[current].search(texts(test), DEPTH)[0]}
-    if best != current:
-        rankings["dense_best"] = pipe.dense[best].search(texts(test), DEPTH)[0]
-    rankings["hybrid"] = pipe.hybrid(best, test, k_rrf)
-    rankings["hybrid_rerank"], _ = pipe.reranked(rankings["hybrid"], test, depth)
+    # 2. Score every system once on test.
+    names = ["bm25", "dense_current"] + (["dense_best"] if best != current else []) + \
+        ["hybrid", "dense_rerank", "hybrid_rerank"]
+    alias = lambda name: "dense_current" if name == "dense_best" and best == current else name
+    chosen = alias(chosen)
+    embeddings = alias("dense_best")
+    rankings = {name: pipe.run(name, test, choice) for name in names}
     scores = {name: score(r, test) for name, r in rankings.items()}
 
     def one(name):
-        if name == "bm25":
-            return lambda q: pipe.bm25.search([q], DEPTH)
-        if name.startswith("dense"):
-            model = current if name == "dense_current" else best
-            return lambda q: pipe.dense[model].search([q], DEPTH)
-        def run(q):
-            question = [Question("x", "x", "x", q, (0,), ())]
-            fused = pipe.hybrid(best, question, k_rrf)
-            return pipe.reranked(fused, question, depth) if name == "hybrid_rerank" else fused
-        return run
+        return lambda q: pipe.run(name, [Question("x", "x", "x", q, (0,), ())], choice)
 
-    order = list(rankings)
-    steps = [(a, b) for a, b in zip(order, order[1:])] + [("bm25", "hybrid_rerank")]
+    pairs = [("bm25", "dense_current"), ("dense_current", "dense_best"),
+             (embeddings, "hybrid"), (embeddings, "dense_rerank"), ("hybrid", "hybrid_rerank"),
+             ("dense_rerank", "hybrid_rerank"), ("bm25", chosen), (embeddings, chosen)]
+    seen, steps = set(), []
+    for a, b in pairs:
+        if a in scores and b in scores and a != b and (a, b) not in seen:
+            seen.add((a, b))
+            steps.append((a, b))
+
     systems = {
-        "test_questions": len(test), "device": device,
+        "test_questions": len(test), "device": device, "chosen": chosen,
+        "embeddings_alone": embeddings,
         "models": {"dense_current": current, "dense_best": best, "reranker": scorer.name,
-                   "rrf_k": k_rrf, "rerank_depth": depth},
+                   "rrf_k": k_rrf, "rerank_depth": depths},
         "systems": {name: {"metrics": metrics.summarize(s, seed=SEED),
                            "latency": latency(one(name), test)}
                     for name, s in scores.items()},
         "paired": {f"{b} vs {a}": {m: metrics.paired(scores[a][m], scores[b][m], seed=SEED)
                                    for m in metrics.HEADLINE} for a, b in steps},
-        "by_domain": {name: by_domain(scores[name], test)
-                      for name in ("bm25", "hybrid_rerank")},
-        "failures": failures(rankings["hybrid_rerank"], test, ds.answers),
+        "by_domain": {name: by_domain(scores[name], test) for name in ("bm25", chosen)},
+        "failures": failures(rankings[chosen], test, ds.answers),
     }
     write_result("systems", systems, directory)
 
-    # 3. Abstention with the shipped system, and with the copilot's original rule.
+    # 3. Abstention: the copilot's original rule, a tuned cosine threshold, and a
+    #    tuned threshold on the cross-encoder score over the chosen pipeline's
+    #    candidates (the hybrid ones if the chosen pipeline fuses).
     held = choose_held_out(ds, bm25_params(directory)) if not limit else \
         {"domain": Counter(q.domain for q in test).most_common(1)[0][0], "rule": "smoke run"}
     removed, splits = gate_split(ds, held["domain"])
-    keep = np.array([i not in removed for i in pipe.bm25.ids])
-    gated = Pipeline.__new__(Pipeline)
-    gated.ds, gated.scorer, gated.directory = ds, scorer, directory
-    gated.bm25 = fit_bm25(ds, bm25_params(directory), removed)
-    gated.dense = {}
-    for name, index in pipe.dense.items():
-        sub = dense.DenseIndex(index.encoder)
-        sub.ids, sub.vectors = index.ids[keep], index.vectors[keep]
-        gated.dense[name] = sub
+    gated = pipe.without(removed, directory)
+    generator = "hybrid" if chosen in ("hybrid", "hybrid_rerank") else "dense"
 
     rerank_conf, cosine_conf, original = {}, {}, {}
-    success = None
+    success_chosen = success_current = None
     for split, (answerable, unanswerable) in splits.items():
         pair_rerank, pair_cosine, pair_original = [], [], []
         for group in (answerable, unanswerable):
-            fused = gated.hybrid(best, group, k_rrf)
-            ranked, top_scores = gated.reranked(fused, group, depth)
+            found = gated.candidates(generator, group, choice)
+            _, top_scores = gated.reranked(found, group, depths[generator])
             pair_rerank.append(top_scores[:, 0])
             current_ranked, current_scores = gated.dense[current].search(texts(group), 1)
             pair_cosine.append(current_scores[:, 0])
             pair_original.append(original_gate(ds, current_ranked, current_scores[:, 0], group))
             if split == "test" and group is answerable:
-                success = score(ranked, group)["success@5"]
-                success_current = score(gated.dense[current].search(texts(group), DEPTH)[0],
+                success_chosen = score(gated.run(chosen, group, choice), group)["success@5"]
+                success_current = score(gated.run("dense_current", group, choice),
                                         group)["success@5"]
         rerank_conf[split], cosine_conf[split], original[split] = (
             tuple(pair_rerank), tuple(pair_cosine), tuple(pair_original))
@@ -417,8 +464,9 @@ def run_dense(ds: Dataset, encoders: dict[str, dense.Encoder], scorer: dense.Sco
             "system": f"dense_current ({current}) with the copilot's original thresholds",
             **_rates(*original["test"], success_current)},
         "tuned_rerank_gate": {
-            "system": "hybrid_rerank, threshold on the top cross-encoder score",
-            **tuned_gate(rerank_conf["valid"], rerank_conf["test"], success)},
+            "system": f"{chosen}, threshold on the top cross-encoder score over "
+                      f"{generator} candidates",
+            **tuned_gate(rerank_conf["valid"], rerank_conf["test"], success_chosen)},
         "tuned_cosine_gate": {
             "system": f"dense_current ({current}), threshold on top cosine",
             **tuned_gate(cosine_conf["valid"], cosine_conf["test"], success_current)},

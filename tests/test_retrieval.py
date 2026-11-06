@@ -308,8 +308,16 @@ def test_dense_run_with_stand_ins_writes_everything(ds, results):
     experiments.tune_bm25(ds)
     encoders = {e.name: e for e in (dense.HashingEncoder("a", 64), dense.HashingEncoder("b", 128))}
     systems = experiments.run_dense(ds, encoders, dense.OverlapScorer(), cache_dir=None)
-    assert {"bm25", "dense_current", "hybrid", "hybrid_rerank"} <= set(systems["systems"])
-    assert "hybrid_rerank vs bm25" in systems["paired"]
+    assert {"bm25", "dense_current", "hybrid", "dense_rerank", "hybrid_rerank"} \
+        <= set(systems["systems"])
+    selection = json.loads((results / "selection_dense.json").read_text())
+    valid = selection["pipelines_valid"]
+    assert selection["chosen_pipeline"] == max(valid, key=valid.get)
+    chosen, alone = systems["chosen"], systems["embeddings_alone"]
+    assert f"{chosen} vs bm25" in systems["paired"]
+    if chosen != alone:
+        assert f"{chosen} vs {alone}" in systems["paired"]
+    assert f"dense_rerank vs {alone}" in systems["paired"]
     gate = json.loads((results / "abstention.json").read_text())
     assert {"original_gate", "tuned_cosine_gate", "tuned_rerank_gate"} <= set(gate)
     experiments.write_result("dataset", data.summary(ds))
@@ -330,3 +338,24 @@ def test_report_check_catches_a_stale_readme(ds, results, tmp_path, monkeypatch)
     report.write()
     assert report.check() == 0
     assert readme.read_text(encoding="utf-8").endswith("rest\n")
+
+
+def test_pipeline_runs_every_named_system(ds, results):
+    experiments.tune_bm25(ds)
+    pipe = experiments.Pipeline(ds, {"a": dense.HashingEncoder("a", 64)}, dense.OverlapScorer(),
+                                None, None)
+    choice = experiments.Choice("a", "a", 10, {"dense": 3, "hybrid": 3})
+    questions = ds.split("test")
+    for name in ("bm25", "dense_current", "dense_best", "hybrid", "dense_rerank",
+                 "hybrid_rerank"):
+        ranked = pipe.run(name, questions, choice)
+        assert ranked.shape == (len(questions), experiments.DEPTH)
+
+
+def test_reduced_index_drops_only_removed_answers(ds, results):
+    experiments.tune_bm25(ds)
+    pipe = experiments.Pipeline(ds, {"a": dense.HashingEncoder("a", 64)}, dense.OverlapScorer(),
+                                None, None)
+    gated = pipe.without({3, 4}, None)
+    assert 3 not in set(gated.dense["a"].ids) and 3 not in set(gated.bm25.ids)
+    assert len(gated.dense["a"].ids) == len(ds.answers) - 2
