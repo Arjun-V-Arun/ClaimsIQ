@@ -2,7 +2,7 @@
 
 **AI-powered insurance analytics and GenAI copilot**
 
-ClaimsIQ is an end-to-end data-science and agentic-AI application built on the public French Motor Third-Party Liability (MTPL2) insurance datasets. It combines **real insurance data, analytical SQL, unsupervised ML, hybrid RAG, controlled LLM tool calling, evaluation, and a business-facing Streamlit dashboard**.
+ClaimsIQ is an end-to-end data-science and agentic-AI application built on the public French Motor Third-Party Liability (MTPL2) insurance datasets. It combines **real insurance data, analytical SQL, unsupervised ML, gated policy-document RAG, controlled LLM tool calling, evaluation, and a business-facing Streamlit dashboard**.
 
 > **Important:** ClaimsIQ does **not** use Assurant data. The MTPL2 source is public research data from an unknown private insurer. The policy documents used for RAG are project-authored demonstration documents.
 
@@ -139,7 +139,7 @@ The v6 run produced:
 | Recall@3 | **100%** |
 | Negative-query rejection | **100%** |
 
-The benchmark is a small project-authored test set. These results demonstrate behaviour of the current implementation; they are not claims of general retrieval quality.
+The benchmark is a small project-authored test set over a **four-document** demonstration corpus. With only four documents, returning any three already scores 75% Recall@3 by chance for a single expected document, so these figures show the pipeline and its rejection gate work end to end. They are not evidence of retrieval quality, and the system has not been tested on a corpus large enough to make ranking hard.
 
 ## Example questions
 
