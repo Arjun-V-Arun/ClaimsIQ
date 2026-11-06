@@ -126,8 +126,8 @@ def document() -> str:
                      "recall@20", "recall@100"):
             out.append(f"| {name.replace('success', 'Success').replace('recall', 'Recall')} "
                        f"| {_ci(m[name])} |")
-        for name in ("mrr@10", "ndcg@10"):
-            out.append(f"| {name.upper().replace('@', '@')} | {_ci(m[name], pct=False)} |")
+        for name, label in (("mrr@10", "MRR@10"), ("ndcg@10", "nDCG@10")):
+            out.append(f"| {label} | {_ci(m[name], pct=False)} |")
         lat = bm25["latency"]
         out += ["", f"Latency: {lat['p50_ms']} ms median, {lat['p95_ms']} ms p95, one query "
                 f"at a time on {lat['device']}.", "",
@@ -135,7 +135,7 @@ def document() -> str:
                 "search. It contains a correct answer for "
                 f"{_pct(pools['solr_pool_has_a_correct_answer'])} of test questions and every "
                 f"correct answer for {_pct(pools['solr_pool_has_every_correct_answer'])}. This "
-                "BM25's top 100 reaches "
+                "project's BM25 top 100 reaches "
                 f"{_pct(pools['our_bm25_top100_has_a_correct_answer'])} and "
                 f"{_pct(pools['our_bm25_top100_has_every_correct_answer'])}. Keyword search "
                 "alone misses many correct answers entirely, which is the gap learned "
@@ -195,7 +195,9 @@ def document() -> str:
                 f"{qs['unanswerable']} test questions unanswerable, while {qs['answerable']:,} "
                 f"questions from other domains stay answerable. The domain was chosen by rule, "
                 f"on the train split only: {held['rule']}. Thresholds are tuned on valid for "
-                "balanced accuracy.", "",
+                "balanced accuracy. A useful gate refuses unanswerable questions without "
+                "refusing answerable ones, and the questions it accepts should score higher "
+                "than all answerable questions do.", "",
                 "| Gate | Refused, unanswerable | Refused, answerable | Success@5, all "
                 "answerable | Success@5, accepted |", "|---|---|---|---|---|"]
         if gate:
@@ -204,8 +206,8 @@ def document() -> str:
             out.append(_gate_rows("Tuned on top cross-encoder score", gate["tuned_rerank_gate"]))
         out.append(_gate_rows("Tuned on BM25 score per unit of query idf", gate_bm25["bm25"]))
         out += ["", "Removing a domain leaves related answers in other domains, so some "
-                "\"unanswerable\" questions still have partly useful answers. Refusal rates "
-                "on them are a lower bound on what an ideal gate would do.", ""]
+                "\"unanswerable\" questions still have partly useful answers, and even a "
+                "perfect gate would not refuse all of them.", ""]
 
     out += ["## Limits", "",
             "- One public dataset from one Q&A site, mostly about US insurance products.",
