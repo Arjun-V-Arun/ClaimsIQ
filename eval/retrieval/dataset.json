@@ -1,0 +1,31 @@
+{
+ "meta": {
+  "dataset": "insuranceQA@5c380dd08606",
+  "code_commit": "f4ad9d7",
+  "generated": "2026-11-06",
+  "seed": 7
+ },
+ "answers": 27413,
+ "answer_median_words": 78,
+ "questions": {
+  "train": 12889,
+  "valid": 2000,
+  "test": 2000
+ },
+ "domains": {
+  "life-insurance": 4371,
+  "medicare-insurance": 2301,
+  "auto-insurance": 2165,
+  "health-insurance": 2002,
+  "home-insurance": 1751,
+  "renters-insurance": 1086,
+  "disability-insurance": 949,
+  "annuities": 800,
+  "retirement-plans": 697,
+  "long-term-care-insurance": 596,
+  "critical-illness-insurance": 135,
+  "other-insurance": 36
+ },
+ "questions_with_several_answers": 6666,
+ "source": "github.com/shuzi/insuranceQA@5c380dd08606 (V2, raw text)"
+}

@@ -1,0 +1,120 @@
+{
+ "meta": {
+  "dataset": "insuranceQA@5c380dd08606",
+  "code_commit": "f4ad9d7",
+  "generated": "2026-11-06",
+  "seed": 7
+ },
+ "system": "bm25",
+ "params": {
+  "k1": 0.9,
+  "b": 0.75,
+  "stem": true
+ },
+ "test_questions": 2000,
+ "metrics": {
+  "success@1": {
+   "estimate": 0.2195,
+   "low": 0.202,
+   "high": 0.238
+  },
+  "success@5": {
+   "estimate": 0.412,
+   "low": 0.391,
+   "high": 0.4335
+  },
+  "success@20": {
+   "estimate": 0.575,
+   "low": 0.5525,
+   "high": 0.596
+  },
+  "success@100": {
+   "estimate": 0.724,
+   "low": 0.7045,
+   "high": 0.7435
+  },
+  "recall@20": {
+   "estimate": 0.4722,
+   "low": 0.4522,
+   "high": 0.4917
+  },
+  "recall@100": {
+   "estimate": 0.6373,
+   "low": 0.6177,
+   "high": 0.6569
+  },
+  "mrr@10": {
+   "estimate": 0.3011,
+   "low": 0.2835,
+   "high": 0.3196
+  },
+  "ndcg@10": {
+   "estimate": 0.2975,
+   "low": 0.2818,
+   "high": 0.3151
+  }
+ },
+ "by_domain": {
+  "life-insurance": {
+   "n": 514,
+   "success@5": 0.4669
+  },
+  "medicare-insurance": {
+   "n": 251,
+   "success@5": 0.4502
+  },
+  "auto-insurance": {
+   "n": 249,
+   "success@5": 0.3333
+  },
+  "health-insurance": {
+   "n": 245,
+   "success@5": 0.4204
+  },
+  "home-insurance": {
+   "n": 201,
+   "success@5": 0.3035
+  },
+  "renters-insurance": {
+   "n": 140,
+   "success@5": 0.3071
+  },
+  "disability-insurance": {
+   "n": 102,
+   "success@5": 0.4706
+  },
+  "retirement-plans": {
+   "n": 95,
+   "success@5": 0.4737
+  },
+  "annuities": {
+   "n": 94,
+   "success@5": 0.4255
+  },
+  "long-term-care-insurance": {
+   "n": 89,
+   "success@5": 0.427
+  },
+  "critical-illness-insurance": {
+   "n": 17,
+   "success@5": 0.4706
+  },
+  "other-insurance": {
+   "n": 3,
+   "success@5": 0.6667
+  }
+ },
+ "latency": {
+  "queries": 200,
+  "p50_ms": 2.3,
+  "p95_ms": 2.7,
+  "device": "CPU"
+ },
+ "keyword_pools": {
+  "pool_size": 100,
+  "solr_pool_has_a_correct_answer": 0.6615,
+  "solr_pool_has_every_correct_answer": 0.4815,
+  "our_bm25_top100_has_a_correct_answer": 0.724,
+  "our_bm25_top100_has_every_correct_answer": 0.5455
+ }
+}

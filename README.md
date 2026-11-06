@@ -2,7 +2,7 @@
 
 **AI-powered insurance analytics and GenAI copilot**
 
-ClaimsIQ is an end-to-end data-science and agentic-AI application built on the public French Motor Third-Party Liability (MTPL2) insurance datasets. It combines **real insurance data, analytical SQL, unsupervised ML, gated policy-document RAG, controlled LLM tool calling, evaluation, and a business-facing Streamlit dashboard**.
+ClaimsIQ is an end-to-end data-science and agentic-AI application built on the public French Motor Third-Party Liability (MTPL2) insurance datasets. It combines **real insurance data, analytical SQL, unsupervised ML, gated policy-document RAG, controlled LLM tool calling, a retrieval benchmark on 2,000 real customer questions, and a business-facing Streamlit dashboard**.
 
 > **Important:** ClaimsIQ does **not** use Assurant data. The MTPL2 source is public research data from an unknown private insurer. The policy documents used for RAG are project-authored demonstration documents.
 
@@ -67,21 +67,20 @@ These are **statistical review signals, not fraud labels or automated claim deci
 
 ![Anomaly review](docs/screenshots/anomaly-review.png)
 
-### Hybrid RAG
+### Retrieval
 
-A small project-authored policy corpus is embedded with Sentence-Transformers and indexed in ChromaDB.
+The copilot's `search_policy` tool searches a small project-authored policy corpus, embedded with Sentence-Transformers and indexed in ChromaDB, behind a relevance gate that accepts a result only when semantic similarity is backed by lexical evidence.
 
-Retrieval uses a hybrid relevance gate combining:
+Four documents cannot show whether retrieval works, so retrieval is also measured on **InsuranceQA**: 27,413 answers written by insurance professionals and 2,000 test questions from real users, with the correct answers labelled by the dataset's authors. Four retrievers are compared on the same questions:
 
 ```text
-semantic similarity
-        +
-lexical evidence
-        ↓
-accept / reject
+BM25 keyword search
+Embedding search (three small models, one chosen on validation data)
+Hybrid: reciprocal rank fusion of the two
+Hybrid + cross-encoder reranking
 ```
 
-This is intentionally stricter than accepting the nearest vector unconditionally. The evaluator includes both relevant and deliberately unrelated queries.
+The copilot's original relevance gate is also tested on questions the index genuinely cannot answer. Results are below and in [`docs/retrieval.md`](docs/retrieval.md).
 
 ### Controlled Agentic AI
 
@@ -108,7 +107,7 @@ For independent multi-tool requests, the application can execute tool calls conc
 
 ## Evaluation
 
-The repository includes two project-authored evaluation suites.
+The agent benchmark is project-authored. Retrieval is measured on a public dataset with outside labels.
 
 ### Agent benchmark
 
@@ -127,19 +126,20 @@ The current benchmark contains **26 cases**, including single-tool and multi-too
 
 The tool-routing metrics measure implementation behaviour on this benchmark. The deterministic answer-fact checker reported **88.5%** and identified three cases for manual inspection, so that figure is intentionally **not presented as semantic answer accuracy**.
 
-### RAG benchmark
+### Retrieval benchmark
 
-The current retrieval benchmark contains **20 cases**: 16 relevant queries and 4 deliberately unrelated queries.
+<!-- retrieval:start -->
+| Measure | Result | Detail |
+|---|---|---|
+| Benchmark | 27,413 expert answers, 2,000 real test questions | InsuranceQA V2, labels from the dataset authors |
+| BM25: correct answer in top 5 | 41.2% (39.1% to 43.4%) | MRR@10 0.301, 2.3 ms per query on CPU |
 
-The v6 run produced:
+*Not run yet. Embedding, fusion, and reranking results come from `python -m src.retrieval eval --dense` on a machine that can download models.*
+<!-- retrieval:end -->
 
-| Metric | Result |
-|---|---:|
-| Recall@1 | **100%** |
-| Recall@3 | **100%** |
-| Negative-query rejection | **100%** |
+Every setting was chosen on the validation split, and the test split was used only to report. Full tables, paired comparisons, per-domain results, failure examples, and limits are in [`docs/retrieval.md`](docs/retrieval.md).
 
-The benchmark is a small project-authored test set over a **four-document** demonstration corpus. With only four documents, returning any three already scores 75% Recall@3 by chance for a single expected document, so these figures show the pipeline and its rejection gate work end to end. They are not evidence of retrieval quality, and the system has not been tested on a corpus large enough to make ranking hard.
+The earlier 20-question test over the four project documents is retired. With four documents, returning any three already scores 75% Recall@3 by chance, so its 100% results said nothing about ranking.
 
 ## Example questions
 
@@ -162,7 +162,7 @@ See [`docs/architecture.md`](docs/architecture.md) for the layer-by-layer design
 
 ## Tech stack
 
-**Python · Pandas · NumPy · SQL/SQLite · scikit-learn · Sentence-Transformers · ChromaDB · Groq LLMs · Streamlit · pytest · Docker · GitHub Actions**
+**Python · Pandas · NumPy · SQL/SQLite · scikit-learn · BM25 · Sentence-Transformers · cross-encoders · ChromaDB · Groq LLMs · Streamlit · pytest · Docker · GitHub Actions**
 
 ## Quickstart
 
@@ -217,7 +217,10 @@ pytest -q
 
 ```powershell
 python scripts/run_eval.py
-python scripts/eval_rag.py
+python -m src.retrieval build          # download InsuranceQA, tune BM25 on validation data
+python -m src.retrieval eval           # BM25 and abstention on test, CPU only
+python -m src.retrieval eval --dense   # embeddings, fusion, reranking; best on a GPU
+python -m src.retrieval check          # BM25 must reproduce the committed numbers
 ```
 
 The agent benchmark reports model/API time separately from tool execution time. The RAG benchmark warms the embedding model before measuring the individual cases.
@@ -233,9 +236,11 @@ ClaimsIQ/
 ├── docs/
 │   ├── architecture.md
 │   ├── architecture.svg
+│   ├── retrieval.md
 │   └── screenshots/
 ├── eval/
-│   └── benchmark.json
+│   ├── benchmark.json
+│   └── retrieval/
 ├── scripts/
 │   ├── bootstrap_real.py
 │   ├── refresh_anomaly_cache.py
@@ -248,7 +253,8 @@ ClaimsIQ/
 │   ├── data/
 │   ├── evaluation/
 │   ├── ml/
-│   └── rag/
+│   ├── rag/
+│   └── retrieval/
 ├── tests/
 ├── Dockerfile
 ├── docker-compose.yml
@@ -275,7 +281,9 @@ Tool selection, retrieval and generated-language quality are different problems.
 - MTPL2 is **motor third-party liability** data, not device-protection data.
 - The policy corpus is project-authored demonstration material, not an insurer's proprietary policy corpus.
 - Isolation Forest is unsupervised and produces review signals, not confirmed fraud labels.
-- The benchmark datasets are relatively small, project-authored evaluation sets.
+- The agent benchmark is a small project-authored set.
+- Retrieval is measured on InsuranceQA, a public Q&A dataset, not on an insurer's policy wording.
+- The copilot still searches the four demonstration documents. The benchmarked retrievers are not yet wired into it.
 - LLM response time depends on the selected model and API conditions.
 - The application is a portfolio/research demonstration, not a production underwriting, pricing or claims-decision engine.
 
@@ -284,3 +292,4 @@ Tool selection, retrieval and generated-language quality are different problems.
 - CASdatasets: French Motor Third-Party Liability datasets (`freMTPL2freq`, `freMTPL2sev`)
 - OpenML dataset ecosystem
 - Groq tool-calling / reasoning documentation
+- Feng et al., *Applying Deep Learning to Answer Selection: A Study and an Open Task*, ASRU 2015 (InsuranceQA, used for research only)

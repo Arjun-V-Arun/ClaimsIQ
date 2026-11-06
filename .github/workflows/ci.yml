@@ -14,3 +14,9 @@ jobs:
           python-version: "3.12"
       - run: pip install -r requirements.txt
       - run: pytest -q
+      - name: BM25 reproduces the committed retrieval numbers
+        run: python -m src.retrieval check
+      - name: Published retrieval numbers match the result files
+        run: python -m src.retrieval report --check
+      - name: Dense retrieval path runs end to end with stand-in models
+        run: python -m src.retrieval eval --dense --smoke

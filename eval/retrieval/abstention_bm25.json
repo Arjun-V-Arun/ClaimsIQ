@@ -1,0 +1,40 @@
+{
+ "meta": {
+  "dataset": "insuranceQA@5c380dd08606",
+  "code_commit": "f4ad9d7",
+  "generated": "2026-11-06",
+  "seed": 7
+ },
+ "held_out": {
+  "domain": "medicare-insurance",
+  "rule": "eligible domain (100+ valid and test questions) whose train questions most often retrieve a same-domain answer first, by BM25",
+  "same_domain_rate": {
+   "medicare-insurance": 0.97,
+   "life-insurance": 0.934,
+   "renters-insurance": 0.926,
+   "home-insurance": 0.848,
+   "auto-insurance": 0.847,
+   "health-insurance": 0.695
+  }
+ },
+ "answers_removed": 2869,
+ "questions": {
+  "valid": {
+   "answerable": 1720,
+   "unanswerable": 280
+  },
+  "test": {
+   "answerable": 1749,
+   "unanswerable": 251
+  }
+ },
+ "bm25": {
+  "confidence": "top-1 score divided by the query's total idf",
+  "threshold": 1.1708,
+  "valid_balanced_accuracy": 0.6901,
+  "refused_when_unanswerable": 0.5976,
+  "refused_when_answerable": 0.2087,
+  "success@5_all_answerable": 0.4071,
+  "success@5_accepted_answerable": 0.401
+ }
+}

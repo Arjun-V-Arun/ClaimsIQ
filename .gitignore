@@ -13,3 +13,4 @@ data/chroma/
 
 # Project-local evaluation and generated artefacts
 *.log
+data/insuranceqa/
